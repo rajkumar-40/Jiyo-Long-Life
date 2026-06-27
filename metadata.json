@@ -1,0 +1,6 @@
+{
+  "name": "Jiyo Long Life - Global Divine AI Health Reconstruction Platform",
+  "description": "A 100% Ayurvedic, divine AI health assistant for total body reconstruction and longevity. Serving humanity globally with expert Acharya wisdom and zero side-effect guidance.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
