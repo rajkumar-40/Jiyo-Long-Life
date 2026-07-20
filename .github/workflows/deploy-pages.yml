@@ -32,6 +32,7 @@ jobs:
 
       - name: Build
         env:
+          VITE_GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GITHUB_ACTIONS: true
         run: npm run build
