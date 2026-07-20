@@ -1,8 +1,4 @@
-import { GoogleGenAI, Type } from "@google/genai";
 import { HealthInput, HealthGuidance } from "../types";
-
-const apiKey = (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '') || '';
-const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 function getFallbackGuidance(input: HealthInput): HealthGuidance {
   const language = input.language || 'English';
@@ -154,80 +150,7 @@ export async function getHealthGuidance(input: HealthInput): Promise<HealthGuida
     }
   }
 
-  if (!ai || !apiKey) {
-    return getFallbackGuidance(input);
-  }
-
-  const response = await ai.models.generateContent({
-    model,
-    contents: { parts },
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          patientName: { type: Type.STRING },
-          bodySituationAndSymptoms: { type: Type.STRING },
-          recommendedTests: { type: Type.STRING },
-          allopathicSupport: { type: Type.STRING },
-          rootCause: { type: Type.STRING },
-          vitaminBase: { type: Type.STRING },
-          painkillerBase: { type: Type.STRING },
-          ayurvedicBase: { type: Type.STRING },
-          brandedMedicines: { type: Type.STRING },
-          optionalTreatments: { type: Type.STRING },
-          dailyTimetable: { type: Type.STRING },
-          homeopathicBase: { type: Type.STRING },
-          lifestyleAdvice: { type: Type.STRING },
-          exerciseAndTherapyGuidance: { type: Type.STRING },
-          dosageAndOverUnderConsumptionDetails: { type: Type.STRING },
-          medicineVerificationSafetyCheck: { type: Type.STRING },
-          reconstructionPlan: { type: Type.STRING },
-          healingTimeline: { type: Type.STRING },
-          effectsAndSideEffects: { type: Type.STRING },
-          impactAndRecoveryDuration: { type: Type.STRING },
-          reassuranceMessage: { type: Type.STRING },
-          surgicalAndAdvancedTherapy: { type: Type.STRING },
-          demographicAdaptation: { type: Type.STRING },
-          bodyPurificationSpecialists: { type: Type.STRING },
-          immediateTreatmentStart: { type: Type.STRING },
-          whatNotToDo: { type: Type.STRING },
-          disclaimer: { type: Type.STRING },
-        },
-        required: [
-          "patientName",
-          "bodySituationAndSymptoms",
-          "recommendedTests",
-          "allopathicSupport",
-          "rootCause",
-          "vitaminBase",
-          "painkillerBase",
-          "ayurvedicBase",
-          "brandedMedicines",
-          "optionalTreatments",
-          "dailyTimetable",
-          "homeopathicBase",
-          "lifestyleAdvice",
-          "exerciseAndTherapyGuidance",
-          "dosageAndOverUnderConsumptionDetails",
-          "medicineVerificationSafetyCheck",
-          "reconstructionPlan",
-          "healingTimeline",
-          "effectsAndSideEffects",
-          "impactAndRecoveryDuration",
-          "reassuranceMessage",
-          "surgicalAndAdvancedTherapy",
-          "demographicAdaptation",
-          "bodyPurificationSpecialists",
-          "immediateTreatmentStart",
-          "whatNotToDo",
-          "disclaimer"
-        ],
-      },
-    },
-  });
-
-  return JSON.parse(response.text || "{}") as HealthGuidance;
+  return getFallbackGuidance(input);
 }
 
 export interface ChatMessage {
@@ -267,18 +190,6 @@ export async function getLongevityChatResponse(
     }
   ];
 
-  if (!ai || !apiKey) {
-    return `The live AI assistant is currently unavailable in this deployment. Please consult a qualified clinician for personalized advice. For now, focus on rest, hydration, balanced meals, and gentle movement while avoiding self-medication.`;
-  }
-
-  const response = await ai.models.generateContent({
-    model,
-    contents,
-    config: {
-      systemInstruction,
-    }
-  });
-
-  return response.text || "I am unable to formulate a response at the moment. Please try again.";
+  return `The live AI assistant is currently unavailable in this deployment. Please consult a qualified clinician for personalized advice. For now, focus on rest, hydration, balanced meals, and gentle movement while avoiding self-medication.`;
 }
 
