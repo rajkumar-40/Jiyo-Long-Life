@@ -1,5 +1,7 @@
 import { HealthInput, HealthGuidance } from "../types";
 
+const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY || "").trim();
+
 function getFallbackGuidance(input: HealthInput): HealthGuidance {
   const language = input.language || 'English';
   return {
@@ -147,6 +149,58 @@ export async function getHealthGuidance(input: HealthInput): Promise<HealthGuida
           data: cleanBase64,
         }
       });
+    }
+  }
+
+  if (apiKey) {
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt + filesDescription }] }],
+          generationConfig: { responseMimeType: 'application/json' },
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        if (text) {
+          const parsed = JSON.parse(text);
+          return {
+            patientName: parsed.patientName || input.name || 'Patient',
+            bodySituationAndSymptoms: parsed.bodySituationAndSymptoms || getFallbackGuidance(input).bodySituationAndSymptoms,
+            recommendedTests: parsed.recommendedTests || getFallbackGuidance(input).recommendedTests,
+            allopathicSupport: parsed.allopathicSupport || getFallbackGuidance(input).allopathicSupport,
+            rootCause: parsed.rootCause || getFallbackGuidance(input).rootCause,
+            vitaminBase: parsed.vitaminBase || getFallbackGuidance(input).vitaminBase,
+            painkillerBase: parsed.painkillerBase || getFallbackGuidance(input).painkillerBase,
+            ayurvedicBase: parsed.ayurvedicBase || getFallbackGuidance(input).ayurvedicBase,
+            brandedMedicines: parsed.brandedMedicines || getFallbackGuidance(input).brandedMedicines,
+            optionalTreatments: parsed.optionalTreatments || getFallbackGuidance(input).optionalTreatments,
+            dailyTimetable: parsed.dailyTimetable || getFallbackGuidance(input).dailyTimetable,
+            homeopathicBase: parsed.homeopathicBase || getFallbackGuidance(input).homeopathicBase,
+            lifestyleAdvice: parsed.lifestyleAdvice || getFallbackGuidance(input).lifestyleAdvice,
+            exerciseAndTherapyGuidance: parsed.exerciseAndTherapyGuidance || getFallbackGuidance(input).exerciseAndTherapyGuidance,
+            dosageAndOverUnderConsumptionDetails: parsed.dosageAndOverUnderConsumptionDetails || getFallbackGuidance(input).dosageAndOverUnderConsumptionDetails,
+            medicineVerificationSafetyCheck: parsed.medicineVerificationSafetyCheck || getFallbackGuidance(input).medicineVerificationSafetyCheck,
+            reconstructionPlan: parsed.reconstructionPlan || getFallbackGuidance(input).reconstructionPlan,
+            healingTimeline: parsed.healingTimeline || getFallbackGuidance(input).healingTimeline,
+            effectsAndSideEffects: parsed.effectsAndSideEffects || getFallbackGuidance(input).effectsAndSideEffects,
+            impactAndRecoveryDuration: parsed.impactAndRecoveryDuration || getFallbackGuidance(input).impactAndRecoveryDuration,
+            reassuranceMessage: parsed.reassuranceMessage || getFallbackGuidance(input).reassuranceMessage,
+            surgicalAndAdvancedTherapy: parsed.surgicalAndAdvancedTherapy || getFallbackGuidance(input).surgicalAndAdvancedTherapy,
+            demographicAdaptation: parsed.demographicAdaptation || getFallbackGuidance(input).demographicAdaptation,
+            bodyPurificationSpecialists: parsed.bodyPurificationSpecialists || getFallbackGuidance(input).bodyPurificationSpecialists,
+            immediateTreatmentStart: parsed.immediateTreatmentStart || getFallbackGuidance(input).immediateTreatmentStart,
+            whatNotToDo: parsed.whatNotToDo || getFallbackGuidance(input).whatNotToDo,
+            disclaimer: parsed.disclaimer || getFallbackGuidance(input).disclaimer,
+          } as HealthGuidance;
+        }
+      }
+    } catch (error) {
+      console.warn('Gemini API call failed, using fallback guidance.', error);
     }
   }
 
