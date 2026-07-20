@@ -1,7 +1,41 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { HealthInput, HealthGuidance } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+const apiKey = (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '') || '';
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+
+function getFallbackGuidance(input: HealthInput): HealthGuidance {
+  const language = input.language || 'English';
+  return {
+    patientName: input.name || 'Patient',
+    bodySituationAndSymptoms: `This is a safe starter response for ${input.name || 'the patient'} in ${language}. The live Gemini integration is currently unavailable in this deployment environment, so the platform is providing a general wellness guidance template instead of a full AI-generated medical report.`,
+    recommendedTests: 'Please consult a qualified physician for any diagnostic evaluation and consider basic blood, urine, or other clinically appropriate tests based on symptoms.',
+    allopathicSupport: 'Any temporary symptomatic support should be discussed with a licensed doctor. Avoid self-medicating without medical supervision.',
+    rootCause: 'The platform cannot determine a precise clinical root cause without a live AI connection. A physician should evaluate the underlying condition directly.',
+    vitaminBase: 'Focus on hydration, balanced meals, adequate protein, sleep, and gentle movement unless your doctor advises otherwise.',
+    painkillerBase: 'Avoid self-prescribing painkillers. Discuss any relief options with a qualified clinician.',
+    ayurvedicBase: 'A gentle Ayurvedic routine such as rest, warm water, light food, and calming habits may support comfort, but only under professional guidance.',
+    brandedMedicines: 'Please verify any brand or medicine with your physician before use.',
+    optionalTreatments: 'Use this section only as a general wellness template; professional assessment is required for a personalized treatment plan.',
+    dailyTimetable: 'Maintain a calm daily routine with hydration, balanced meals, light movement, and adequate rest.',
+    homeopathicBase: 'Homeopathic support should be selected carefully and discussed with a qualified practitioner.',
+    lifestyleAdvice: 'Prioritize sleep, stress reduction, hydration, and a nourishing diet while avoiding overexertion.',
+    exerciseAndTherapyGuidance: 'Begin with gentle movement and avoid intense exercise until the symptoms are assessed.',
+    dosageAndOverUnderConsumptionDetails: 'Do not change any medicine dosage without a doctor’s advice. Follow the exact instructions on the prescribed label.',
+    medicineVerificationSafetyCheck: 'Always verify medicines and speak with a doctor or pharmacist before consuming anything new.',
+    reconstructionPlan: 'Use this as a temporary wellness template while awaiting professional medical guidance.',
+    healingTimeline: 'Recovery depends on the underlying condition and should be monitored by a healthcare professional.',
+    effectsAndSideEffects: 'Be alert for worsening symptoms and seek care promptly if they escalate.',
+    impactAndRecoveryDuration: 'The expected recovery timeline should be determined by a clinician after assessment.',
+    reassuranceMessage: 'Please stay calm and seek appropriate medical advice if symptoms worsen.',
+    surgicalAndAdvancedTherapy: 'Advanced or surgical treatment options should only be considered after a specialist’s evaluation.',
+    demographicAdaptation: 'Any plan should be adapted to age, gender, and medical history by a clinician.',
+    bodyPurificationSpecialists: 'Consult a qualified Ayurvedic or medical specialist for any purification therapy.',
+    immediateTreatmentStart: 'Rest, hydrate, and seek medical advice promptly for concerning symptoms.',
+    whatNotToDo: 'Avoid self-medication, skipping medical evaluation, or pushing through severe symptoms.',
+    disclaimer: 'This is general supportive wellness guidance and not a diagnosis. Please seek medical care from a qualified physician for personal treatment decisions.'
+  };
+}
 
 export async function getHealthGuidance(input: HealthInput): Promise<HealthGuidance> {
   const model = "gemini-3.1-pro-preview";
@@ -120,6 +154,10 @@ export async function getHealthGuidance(input: HealthInput): Promise<HealthGuida
     }
   }
 
+  if (!ai || !apiKey) {
+    return getFallbackGuidance(input);
+  }
+
   const response = await ai.models.generateContent({
     model,
     contents: { parts },
@@ -228,6 +266,10 @@ export async function getLongevityChatResponse(
       parts: [{ text: question }]
     }
   ];
+
+  if (!ai || !apiKey) {
+    return `The live AI assistant is currently unavailable in this deployment. Please consult a qualified clinician for personalized advice. For now, focus on rest, hydration, balanced meals, and gentle movement while avoiding self-medication.`;
+  }
 
   const response = await ai.models.generateContent({
     model,
